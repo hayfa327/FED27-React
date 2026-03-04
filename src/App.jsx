@@ -10,13 +10,21 @@ import { ProductsList } from "./Components/Products/ProductsList";
 import { ProductDetail } from "./Components/Products/ProductDetail";
 import { ProductReviews } from "./Components/Products/ProductReviews";
 import { ProductSpecs } from "./Components/Products/ProductSpecs";
+import { MainLayout } from "./Components/Layouts/MainLayout";
+import { Contact } from "./Components/Pages/Contact";
+import { Services } from "./Components/Pages/Services";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route index element={<Home />} />
-        <Route path="about" element={<About />} />
+        {/* Layout Route (no path) - wraps child routes with shared layout */}
+        <Route element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path="about" element={<About />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="services" element={<Services />} />
+        </Route>
 
         {/* Nested Routes Example - go to /dashboard or /dashboard/settings or /dashboard/profile */}
         <Route path="dashboard" element={<Dashboard />}>
