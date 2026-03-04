@@ -1,7 +1,41 @@
-import {Home} from "./Home";
+import { Home } from "./Home";
+import { About } from "./About";
+import { BrowserRouter, Routes, Route } from "react-router";
+import { Dashboard } from "./Components/Dashboard/Dashboard";
+import { DashboardHome } from "./Components/Dashboard/DashboardHome";
+import { Settings } from "./Components/Dashboard/Settings";
+import { Profile } from "./Components/Dashboard/Profile";
+import { Products } from "./Components/Products/Products";
+import { ProductsList } from "./Components/Products/ProductsList";
+import { ProductDetail } from "./Components/Products/ProductDetail";
+import { ProductReviews } from "./Components/Products/ProductReviews";
+import { ProductSpecs } from "./Components/Products/ProductSpecs";
 
 const App = () => {
-  return <Home />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route index element={<Home />} />
+        <Route path="about" element={<About />} />
+
+        {/* Nested Routes Example - go to /dashboard or /dashboard/settings or /dashboard/profile */}
+        <Route path="dashboard" element={<Dashboard />}>
+          <Route index element={<DashboardHome />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+
+        {/* Nested Dynamic Routes Example - go to /products or /products/1 or /products/1/reviews */}
+        <Route path="products" element={<Products />}>
+          <Route index element={<ProductsList />} />
+          <Route path=":productId" element={<ProductDetail />}>
+            <Route index element={<ProductSpecs />} />
+            <Route path="reviews" element={<ProductReviews />} />
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 };
 
 export default App;
