@@ -9,8 +9,12 @@ export const ThemesProvider = ({ children }) => {
         localStorage.setItem("theme", theme);
     }, [theme]);
 
+    function toggleTheme() {
+        setTheme(prevTheme => prevTheme === 'lightTheme' ? 'darkTheme' : 'lightTheme');
+    }
+
     return (
-        <ThemesContext.Provider value={{ theme, setTheme }}>
+        <ThemesContext.Provider value={{ theme, toggleTheme }}>
             {children}
         </ThemesContext.Provider>
     )
