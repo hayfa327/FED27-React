@@ -561,12 +561,14 @@ When you run the app, you should see:
 When you run the app, you should see:
 
 **Part A:**
+
 - Character data is fetched once when the app loads
 - The Navbar shows the character count (e.g., "Characters (82)")
 - CharacterList displays characters without its own fetch logic
 - No duplicate API calls when navigating between pages
 
 **Part B:**
+
 - Each character in the list has a favorite button
 - Clicking the button toggles between filled and empty star
 - Character detail page also has a working favorite button
@@ -575,6 +577,7 @@ When you run the app, you should see:
 - Favorites persist when navigating between pages (but reset on page refresh)
 
 **Part C (Bonus):**
+
 - A theme toggle button appears in the Navbar
 - Clicking it switches the entire app between light and dark themes
 - The theme applies consistently across all pages
@@ -701,18 +704,18 @@ When you run the app, you should see:
    - Import `useRef` and `useEffect` from React
    - Import the `CustomInput` component
 
-6. **Use the custom input with a ref**
+5. **Use the custom input with a ref**
    - Create a ref using `useRef(null)`
    - Pass the ref to `CustomInput` using the `ref` prop
    - Use `useEffect` to auto-focus the input on mount
 
-7. **Add search functionality**
+6. **Add search functionality**
    - Create state for the search query
    - Create state for search results (can be mock data)
    - Add a submit handler that searches and clears the input
    - Add a button that focuses the search input when clicked
 
-8. **Add the SearchForm to your app**
+7. **Add the SearchForm to your app**
    - In `App.jsx`, import the `SearchForm` component
    - Add a new route: `<Route path="/search" element={<SearchForm />} />`
    - Add a link to the Navbar
@@ -772,6 +775,7 @@ When you run the app, you should see:
 ### Hints
 
 - **useRef basics:**
+
   ```jsx
   const inputRef = useRef(null);
   // Access the DOM element: inputRef.current
@@ -779,6 +783,7 @@ When you run the app, you should see:
   ```
 
 - **Ref as prop (React 19+):**
+
   ```jsx
   function CustomInput({ ref, ...props }) {
     return <input ref={ref} {...props} />;
@@ -786,23 +791,25 @@ When you run the app, you should see:
   ```
 
 - **Legacy forwardRef syntax (React 18 and earlier):**
+
   ```jsx
   const CustomInput = forwardRef((props, ref) => {
     return <input ref={ref} {...props} />;
   });
-  CustomInput.displayName = 'CustomInput';
+  CustomInput.displayName = "CustomInput";
   ```
 
 - **Storing interval IDs in refs:**
+
   ```jsx
   const intervalRef = useRef(null);
-  
+
   const start = () => {
     intervalRef.current = setInterval(() => {
-      setTime(prev => prev + 10);
+      setTime((prev) => prev + 10);
     }, 10);
   };
-  
+
   const stop = () => {
     clearInterval(intervalRef.current);
     intervalRef.current = null;
@@ -810,6 +817,7 @@ When you run the app, you should see:
   ```
 
 - **Cleanup on unmount:**
+
   ```jsx
   useEffect(() => {
     return () => {
@@ -821,16 +829,18 @@ When you run the app, you should see:
   ```
 
 - **Getting focusable elements in a modal:**
+
   ```jsx
   const focusableElements = modalRef.current.querySelectorAll(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
   );
   ```
 
 - **Saving and restoring focus:**
+
   ```jsx
   const previouslyFocusedRef = useRef(null);
-  
+
   useEffect(() => {
     if (isOpen) {
       previouslyFocusedRef.current = document.activeElement;
@@ -848,7 +858,7 @@ When you run the app, you should see:
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     const centiseconds = Math.floor((ms % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${centiseconds.toString().padStart(2, "0")}`;
   };
   ```
 
@@ -857,26 +867,435 @@ When you run the app, you should see:
 When you run the app, you should see:
 
 **Part A:**
+
 - The name input is automatically focused when ContactForm loads
 - A "Clear & Refocus" button clears the form and returns focus to the name input
 - Validation focuses on the first empty required field
 
 **Part B:**
+
 - A working stopwatch with Start, Stop, and Reset buttons
 - Time displays in `MM:SS.ms` format
 - The timer keeps running while navigating away (but stops if unmounted)
 - No memory leaks from orphaned intervals
 
 **Part C:**
+
 - A CustomInput component that accepts refs from parent components
 - The SearchForm auto-focuses the search input on mount
 - A "Focus Search" button programmatically focuses the input
 - The custom input properly passes through all standard input props
 
 **Part D (Advanced):**
+
 - A modal that focuses its content when opened
 - Tab key cycles only through focusable elements inside the modal
 - Pressing Escape closes the modal
 - When the modal closes, focus returns to the button that opened it
 
 ---
+
+## Exercise 7: Custom Hooks
+
+**Goal:** Learn how to extract reusable stateful logic into custom hooks, enabling code reuse across components and cleaner separation of concerns.
+
+### Part A: useFetch - Extracting Data Fetching Logic
+
+**Goal:** Create a reusable hook for fetching data with loading and error states.
+
+#### Steps
+
+1. **Create the hooks folder and file**
+   - Create a new folder `src/hooks`
+   - Create a new file `src/hooks/useFetch.js`
+   - Import `useState` and `useEffect` from React
+
+2. **Define the useFetch hook**
+   - Create a function called `useFetch` that accepts a `url` parameter
+   - Export the function as the default export
+
+3. **Set up state inside the hook**
+   - Create state for `data` (initially `null`)
+   - Create state for `loading` (initially `true`)
+   - Create state for `error` (initially `null`)
+
+4. **Implement the fetch logic**
+   - Use `useEffect` with `url` in the dependency array
+   - Inside the effect, create an async function to fetch data
+   - Update `data` with the parsed JSON response
+   - Set `loading` to `false` when done
+   - Catch errors and set the `error` state
+
+5. **Add a refetch function**
+   - Create a `refetch` function that resets loading state and fetches again
+   - Use `useCallback` to memoize the function if desired
+
+6. **Return the hook values**
+   - Return an object containing `{ data, loading, error, refetch }`
+
+7. **Create a PlanetList component to test the hook**
+   - Create a new file `src/components/PlanetList/PlanetList.jsx`
+   - Import and use `useFetch` with `https://swapi.info/api/planets`
+   - Display loading, error, or planet names based on the hook's return values
+
+8. **Refactor CharacterContext to use useFetch**
+   - Open `src/context/CharacterContext.jsx`
+   - Import `useFetch` from your hooks folder
+   - Replace the local state and useEffect with a call to `useFetch`
+   - Pass the returned `data` as `characters` in the context value
+
+9. **Add routes and navigation**
+   - Add a route for `/planets` in `App.jsx`
+   - Add a "Planets" link to the Navbar
+
+### Part B: useLocalStorage - Persistent State
+
+**Goal:** Create a hook that syncs state with localStorage, allowing data to persist across page refreshes.
+
+#### Steps
+
+1. **Create the useLocalStorage hook file**
+   - Create a new file `src/hooks/useLocalStorage.js`
+   - Import `useState` and `useEffect` from React
+
+2. **Define the hook signature**
+   - Create a function called `useLocalStorage` that accepts `key` and `initialValue` parameters
+   - Export the function
+
+3. **Initialize state from localStorage**
+   - Use `useState` with an initializer function (lazy initialization)
+   - Inside the initializer, try to get the value from `localStorage.getItem(key)`
+   - If a value exists, parse it with `JSON.parse` and return it
+   - If no value exists or parsing fails, return `initialValue`
+   - Wrap in try/catch to handle JSON parse errors
+
+4. **Sync state changes to localStorage**
+   - Use `useEffect` with `key` and `value` in the dependency array
+   - Inside the effect, call `localStorage.setItem(key, JSON.stringify(value))`
+   - Wrap in try/catch to handle storage quota errors
+
+5. **Return the state and setter**
+   - Return `[value, setValue]` like the standard `useState` hook
+   - This maintains API compatibility with `useState`
+
+6. **Refactor FavoritesContext to use useLocalStorage**
+   - Open `src/context/FavoritesContext.jsx`
+   - Import `useLocalStorage` from your hooks folder
+   - Replace `useState([])` with `useLocalStorage('favorites', [])`
+   - The rest of the context logic remains the same
+
+7. **Test persistence**
+   - Add some characters to favorites
+   - Refresh the page
+   - Verify favorites are still displayed
+
+### Part C: useStopwatch - Extracting Component Logic
+
+**Goal:** Extract the stopwatch timer logic into a reusable hook, separating logic from presentation.
+
+#### Steps
+
+1. **Create the useStopwatch hook file**
+   - Create a new file `src/hooks/useStopwatch.js`
+   - Import `useState`, `useRef`, and `useEffect` from React
+
+2. **Move state and refs into the hook**
+   - Create state for `time` (number, initially `0`)
+   - Create state for `isRunning` (boolean, initially `false`)
+   - Create a ref `intervalRef` using `useRef(null)`
+
+3. **Implement the start function**
+   - Create a `start` function inside the hook
+   - Check if already running (return early if `intervalRef.current` exists)
+   - Set `isRunning` to `true`
+   - Use `setInterval` to increment `time` every 10ms
+   - Store the interval ID in `intervalRef.current`
+
+4. **Implement the stop function**
+   - Create a `stop` function
+   - Check if not running (return early if no `intervalRef.current`)
+   - Set `isRunning` to `false`
+   - Call `clearInterval(intervalRef.current)`
+   - Set `intervalRef.current` to `null`
+
+5. **Implement the reset function**
+   - Create a `reset` function
+   - Call `stop()` first
+   - Set `time` back to `0`
+
+6. **Add the formatTime helper**
+   - Create a `formatTime` function that converts milliseconds to `MM:SS.ms` format
+   - Calculate minutes, seconds, and centiseconds
+
+7. **Add cleanup on unmount**
+   - Use `useEffect` to return a cleanup function
+   - Clear the interval if it exists when the component unmounts
+
+8. **Return the hook values**
+   - Return `{ time, isRunning, start, stop, reset, formattedTime: formatTime(time) }`
+
+9. **Refactor Stopwatch component**
+   - Open `src/components/Stopwatch/Stopwatch.jsx`
+   - Import `useStopwatch` from your hooks folder
+   - Remove all local state, refs, and functions
+   - Call `useStopwatch()` and destructure the returned values
+   - The component now only handles rendering
+
+10. **Create a CountdownTimer component (optional)**
+    - Create a new file `src/components/CountdownTimer/CountdownTimer.jsx`
+    - Create a similar `useCountdown` hook that counts down from a starting value
+    - Demonstrate how the pattern can be adapted for different use cases
+
+### Part D: useForm - Form State Management
+
+**Goal:** Create a generic form handling hook that reduces boilerplate for form state management.
+
+#### Steps
+
+1. **Create the useForm hook file**
+   - Create a new file `src/hooks/useForm.js`
+   - Import `useState` from React
+
+2. **Define the hook signature**
+   - Create a function called `useForm` that accepts:
+     - `initialValues` (object with field names as keys)
+     - `validate` (optional function that returns an errors object)
+   - Export the function
+
+3. **Set up state for values and errors**
+   - Create state for `values` initialized with `initialValues`
+   - Create state for `errors` initialized as an empty object
+   - Create state for `touched` to track which fields have been interacted with
+
+4. **Create the handleChange function**
+   - Create a function that accepts an event
+   - Extract `name` and `value` from `event.target`
+   - Update `values` state with the new value for that field
+   - Use computed property syntax: `{ ...values, [name]: value }`
+
+5. **Create the handleBlur function**
+   - Create a function that accepts an event
+   - Extract `name` from `event.target`
+   - Mark the field as touched in the `touched` state
+   - Optionally run validation for that field
+
+6. **Create the handleSubmit function**
+   - Create a function that accepts a callback and returns an event handler
+   - The returned handler should:
+     - Call `e.preventDefault()`
+     - Run validation if a `validate` function was provided
+     - If there are errors, set them in state and return
+     - If no errors, call the callback with `values`
+
+7. **Create the reset function**
+   - Create a function that resets `values` to `initialValues`
+   - Clear `errors` and `touched` states
+
+8. **Create the setFieldValue function**
+   - Create a function that accepts a field name and value
+   - Update just that field in `values`
+   - Useful for programmatic updates
+
+9. **Return the hook values**
+   - Return `{ values, errors, touched, handleChange, handleBlur, handleSubmit, reset, setFieldValue }`
+
+10. **Refactor ContactForm to use useForm**
+    - Open `src/components/ContactForm/ContactForm.jsx`
+    - Import `useForm` from your hooks folder
+    - Replace individual `useState` calls with a single `useForm` call
+    - Create a validation function that checks required fields
+    - Update the JSX to use `handleChange` and `values.fieldName`
+
+11. **Create a LoginForm component**
+    - Create a new file `src/components/LoginForm/LoginForm.jsx`
+    - Use `useForm` with fields for `email` and `password`
+    - Add validation for required fields and email format
+    - Add a route and Navbar link
+
+### Part E: useDebounce (Bonus Challenge)
+
+**Goal:** Create a hook that debounces a value, useful for optimizing search inputs and reducing API calls.
+
+#### Steps
+
+1. **Create the useDebounce hook file**
+   - Create a new file `src/hooks/useDebounce.js`
+   - Import `useState` and `useEffect` from React
+
+2. **Define the hook signature**
+   - Create a function called `useDebounce` that accepts:
+     - `value` (the value to debounce)
+     - `delay` (milliseconds to wait, default 500)
+   - Export the function
+
+3. **Set up debounced state**
+   - Create state for `debouncedValue` initialized with `value`
+
+4. **Implement the debounce effect**
+   - Use `useEffect` with `value` and `delay` in the dependency array
+   - Inside the effect, use `setTimeout` to update `debouncedValue` after the delay
+   - Return a cleanup function that calls `clearTimeout`
+
+5. **Return the debounced value**
+   - Return `debouncedValue`
+
+6. **Create a live search feature**
+   - Open `src/components/SearchForm/SearchForm.jsx` or create a new component
+   - Import `useDebounce` and `useCharacters` from their respective files
+   - Create state for the search query
+   - Pass the search query to `useDebounce` with a 300ms delay
+   - Use `useEffect` to filter characters when the debounced value changes
+   - Display filtered results as the user types
+
+7. **Test the debounce**
+   - Type quickly in the search input
+   - Observe that filtering only happens after you stop typing
+   - Check the console to verify reduced function calls
+
+### Hints
+
+- Custom hooks must start with "use" (e.g., `useFetch`, `useLocalStorage`)
+- Custom hooks can use other hooks (including other custom hooks)
+- Custom hooks share stateful logic, not state itself - each component using a hook gets its own state
+- Return values can be arrays (like `useState`) or objects (like multiple values)
+
+- **useFetch pattern:**
+
+  ```jsx
+  function useFetch(url) {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(url);
+          if (!response.ok) throw new Error("Fetch failed");
+          const json = await response.json();
+          setData(json);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }, [url]);
+
+    return { data, loading, error };
+  }
+  ```
+
+- **useLocalStorage pattern:**
+
+  ```jsx
+  function useLocalStorage(key, initialValue) {
+    const [value, setValue] = useState(() => {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : initialValue;
+      } catch {
+        return initialValue;
+      }
+    });
+
+    useEffect(() => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (err) {
+        console.error("Failed to save to localStorage:", err);
+      }
+    }, [key, value]);
+
+    return [value, setValue];
+  }
+  ```
+
+- **useDebounce pattern:**
+
+  ```jsx
+  function useDebounce(value, delay = 500) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    return debouncedValue;
+  }
+  ```
+
+- **useForm pattern:**
+
+  ```jsx
+  function useForm(initialValues, validate) {
+    const [values, setValues] = useState(initialValues);
+    const [errors, setErrors] = useState({});
+
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setValues((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = (callback) => (e) => {
+      e.preventDefault();
+      const validationErrors = validate ? validate(values) : {};
+      if (Object.keys(validationErrors).length === 0) {
+        callback(values);
+      } else {
+        setErrors(validationErrors);
+      }
+    };
+
+    const reset = () => {
+      setValues(initialValues);
+      setErrors({});
+    };
+
+    return { values, errors, handleChange, handleSubmit, reset };
+  }
+  ```
+
+### Expected Result
+
+When you run the app, you should see:
+
+**Part A:**
+
+- A reusable `useFetch` hook that works with any URL
+- A PlanetList component fetching and displaying planets
+- CharacterContext simplified by using `useFetch` internally
+- No duplicate fetching logic across components
+
+**Part B:**
+
+- Favorites persist across page refreshes
+- Opening the app in a new tab shows previously saved favorites
+- The `useLocalStorage` hook works like `useState` but syncs with browser storage
+
+**Part C:**
+
+- Stopwatch component is now purely presentational
+- All timer logic is encapsulated in `useStopwatch`
+- The hook could be reused for other timing features
+- Proper cleanup prevents memory leaks
+
+**Part D:**
+
+- ContactForm uses a single `useForm` hook instead of multiple `useState` calls
+- Form validation is centralized in a validate function
+- The same hook powers multiple forms (ContactForm, LoginForm)
+- Consistent form handling patterns across the app
+
+**Part E (Bonus):**
+
+- Live search filters characters as you type
+- Search only triggers after you stop typing (debounced)
+- No excessive re-renders or function calls during rapid typing
+- Better performance and user experience
