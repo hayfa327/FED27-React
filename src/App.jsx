@@ -16,6 +16,8 @@ import { Services } from "./Components/Pages/Services";
 import { CharacterProvider } from "./Context/CharacterContext";
 import { RefExample } from "./useRef/RefExample";
 import { MultiStepForm } from "./MultiStepForm/MultiStepForm";
+import {PerformanceExample} from "./Performance/PerformanceExample";
+import {HooksExample} from "./CustomHooks/HooksExample";
 
 const App = () => {
   return (
@@ -49,6 +51,8 @@ const App = () => {
           <Route path="/useRef" element={<RefExample />} />
 
           <Route path="/multistep" element={<MultiStepForm />} />
+          <Route path={"/performance"} element={<PerformanceExample/>} />
+          <Route path={'/hooks'} element={<HooksExample />} />
         </Routes>
       </CharacterProvider>
     </BrowserRouter>

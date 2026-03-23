@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import { useContext, useEffect, useState } from "react";
 import { About } from "./About";
 import {CharacterContext} from "./Context/CharacterContext";
 
