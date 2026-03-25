@@ -1299,3 +1299,501 @@ When you run the app, you should see:
 - Search only triggers after you stop typing (debounced)
 - No excessive re-renders or function calls during rapid typing
 - Better performance and user experience
+
+---
+
+## Exercise 8: Performance Optimization
+
+**Goal:** Learn how to optimize React applications using `React.memo`, `useCallback`, and `useMemo` to prevent unnecessary re-renders and expensive recalculations.
+
+### Concepts Overview
+
+Before diving into the exercises, understand what causes re-renders in React:
+
+1. **State changes** - When a component's state updates, it re-renders
+2. **Prop changes** - When a component receives new props, it re-renders
+3. **Parent re-renders** - When a parent component re-renders, all its children re-render by default
+4. **Context changes** - When context value changes, all consuming components re-render
+
+The performance tools we'll learn:
+
+- **`React.memo`** - Prevents a component from re-rendering if its props haven't changed
+- **`useCallback`** - Memoizes functions so they maintain the same reference between renders
+- **`useMemo`** - Memoizes computed values so expensive calculations aren't repeated unnecessarily
+
+### Part A: Understanding Re-renders with React.memo
+
+**Goal:** Learn how `React.memo` prevents unnecessary re-renders of child components.
+
+#### Steps
+
+1. **Create a PerformanceDemo component**
+   - Create a new file `src/components/PerformanceDemo/PerformanceDemo.jsx`
+   - Import `useState` from React
+   - Create a functional component called `PerformanceDemo`
+   - Export the component using a default export
+
+2. **Set up parent state**
+   - Create state for `count` (number, initially `0`)
+   - Create state for `text` (string, initially empty)
+   - Add a button to increment `count`
+   - Add an input field to update `text`
+
+3. **Create a ChildComponent without memo**
+   - In the same file or a separate file, create a `ChildComponent` that accepts a `name` prop
+   - Add a `console.log` inside the component: `console.log('ChildComponent rendered:', name)`
+   - Render the `ChildComponent` inside `PerformanceDemo` with a static name prop
+
+4. **Observe unnecessary re-renders**
+   - Open the browser console
+   - Type in the text input or click the increment button
+   - Notice that `ChildComponent` re-renders even though its `name` prop never changes
+
+5. **Wrap ChildComponent with React.memo**
+   - Import `memo` from React
+   - Wrap the component: `const ChildComponent = memo(function ChildComponent({ name }) { ... })`
+   - Alternatively: `export default memo(ChildComponent)`
+
+6. **Verify memo prevents re-renders**
+   - Test again - type in the input and increment the counter
+   - The child component should no longer log re-renders
+   - Only changes to the `name` prop will cause it to re-render
+
+7. **Add the route and navigation**
+   - In `App.jsx`, import the `PerformanceDemo` component
+   - Add a route for `/performance`
+   - Add a link to the Navbar
+
+### Part B: useCallback - Memoizing Functions
+
+**Goal:** Learn how `useCallback` preserves function references to work effectively with `React.memo`.
+
+#### Steps
+
+1. **Expose the memo limitation with functions**
+   - In `PerformanceDemo`, create a function `handleClick` that logs "Button clicked"
+   - Pass this function as a prop to `ChildComponent`: `<ChildComponent name="Alice" onClick={handleClick} />`
+   - Update `ChildComponent` to accept and use the `onClick` prop
+   - Keep `React.memo` on the child component
+
+2. **Observe memo failing with function props**
+   - Type in the text input or increment the counter
+   - Notice that `ChildComponent` re-renders again despite using `memo`
+   - This happens because `handleClick` is recreated on every render (new reference)
+
+3. **Add console.log to demonstrate the issue**
+   - Add a `useEffect` in `ChildComponent` that logs when `onClick` changes:
+     ```jsx
+     useEffect(() => {
+       console.log('onClick reference changed');
+     }, [onClick]);
+     ```
+   - You'll see this logs on every parent re-render
+
+4. **Wrap the function with useCallback**
+   - Import `useCallback` from React
+   - Wrap `handleClick` with `useCallback`:
+     ```jsx
+     const handleClick = useCallback(() => {
+       console.log('Button clicked');
+     }, []);
+     ```
+   - The empty dependency array means this function is created once and never changes
+
+5. **Verify the fix**
+   - Test again - the child component should no longer re-render when typing or incrementing
+   - The `useEffect` logging should only run once on mount
+
+6. **Practice with dependencies**
+   - Create a new function `handleClickWithCount` that logs the current count
+   - Wrap it with `useCallback` and include `count` in the dependency array:
+     ```jsx
+     const handleClickWithCount = useCallback(() => {
+       console.log('Count is:', count);
+     }, [count]);
+     ```
+   - Pass this to a second child component
+   - Observe that this child only re-renders when `count` changes, not when `text` changes
+
+7. **Create a practical example: Filtered List**
+   - Create state for `items` (array of objects with `id` and `name`)
+   - Create state for `filter` (string)
+   - Create a `handleRemove` function that removes an item by id
+   - Wrap `handleRemove` with `useCallback`
+   - Create a memoized `ListItem` component that receives `item` and `onRemove` props
+   - Verify that removing one item doesn't cause all other items to re-render
+
+### Part C: useMemo - Memoizing Computed Values
+
+**Goal:** Learn how `useMemo` prevents expensive recalculations on every render.
+
+#### Steps
+
+1. **Create an expensive computation scenario**
+   - In `PerformanceDemo`, create an array of 10,000 numbers
+   - Create a function that filters this array based on a search term and calculates statistics
+   - This simulates an expensive computation
+
+2. **Implement without useMemo first**
+   - Create state for `searchTerm` (string)
+   - Create a computed value that filters and processes the large array:
+     ```jsx
+     const filteredData = numbers
+       .filter(n => n.toString().includes(searchTerm))
+       .map(n => ({ value: n, squared: n * n }));
+     
+     const sum = filteredData.reduce((acc, item) => acc + item.value, 0);
+     ```
+   - Add a console.log with `console.time`/`console.timeEnd` to measure computation time
+
+3. **Observe the performance issue**
+   - Add an unrelated piece of state (like a counter)
+   - Click the counter button and watch the console
+   - Notice the expensive computation runs on every render, even when `searchTerm` hasn't changed
+
+4. **Wrap with useMemo**
+   - Import `useMemo` from React
+   - Wrap the expensive computation:
+     ```jsx
+     const { filteredData, sum } = useMemo(() => {
+       console.time('Expensive calculation');
+       const filtered = numbers
+         .filter(n => n.toString().includes(searchTerm))
+         .map(n => ({ value: n, squared: n * n }));
+       const total = filtered.reduce((acc, item) => acc + item.value, 0);
+       console.timeEnd('Expensive calculation');
+       return { filteredData: filtered, sum: total };
+     }, [searchTerm, numbers]);
+     ```
+
+5. **Verify the optimization**
+   - Click the counter button
+   - The expensive calculation should NOT run (no console.time output)
+   - Change the search term
+   - The calculation should run only when `searchTerm` changes
+
+6. **Create a derived state example**
+   - Using the character data from context, create a component that:
+     - Sorts characters alphabetically
+     - Groups them by first letter
+     - Calculates statistics (count per letter, tallest character, etc.)
+   - Wrap these computations with `useMemo`
+
+7. **Memoize complex objects passed as props**
+   - Create an options object that's passed to a child component:
+     ```jsx
+     const chartOptions = useMemo(() => ({
+       color: theme === 'dark' ? '#fff' : '#000',
+       showGrid: true,
+       data: processedData
+     }), [theme, processedData]);
+     ```
+   - This prevents the child from re-rendering due to new object references
+
+### Part D: Combining All Three - Building an Optimized Component
+
+**Goal:** Apply `memo`, `useCallback`, and `useMemo` together in a realistic scenario.
+
+#### Steps
+
+1. **Create a CharacterSearch component**
+   - Create a new file `src/components/CharacterSearch/CharacterSearch.jsx`
+   - Import `useState`, `useMemo`, `useCallback`, and `memo` from React
+   - Import the `useCharacters` hook from context
+
+2. **Set up the component state**
+   - Create state for `searchTerm` (string)
+   - Create state for `sortBy` (string: 'name', 'height', 'mass')
+   - Create state for `sortOrder` (string: 'asc', 'desc')
+   - Create state for `selectedIds` (Set or array of selected character IDs)
+
+3. **Create memoized filtered and sorted data**
+   - Use `useMemo` to filter characters by search term
+   - Use another `useMemo` (or combine) to sort the filtered results
+   - Add console.log to verify computations only run when dependencies change:
+     ```jsx
+     const filteredCharacters = useMemo(() => {
+       console.log('Filtering characters...');
+       return characters.filter(char =>
+         char.name.toLowerCase().includes(searchTerm.toLowerCase())
+       );
+     }, [characters, searchTerm]);
+
+     const sortedCharacters = useMemo(() => {
+       console.log('Sorting characters...');
+       return [...filteredCharacters].sort((a, b) => {
+         // sorting logic based on sortBy and sortOrder
+       });
+     }, [filteredCharacters, sortBy, sortOrder]);
+     ```
+
+4. **Create memoized event handlers**
+   - Use `useCallback` for the search input handler
+   - Use `useCallback` for sort change handlers
+   - Use `useCallback` for the selection toggle handler:
+     ```jsx
+     const handleToggleSelect = useCallback((id) => {
+       setSelectedIds(prev => {
+         const newSet = new Set(prev);
+         if (newSet.has(id)) {
+           newSet.delete(id);
+         } else {
+           newSet.add(id);
+         }
+         return newSet;
+       });
+     }, []);
+     ```
+
+5. **Create a memoized CharacterCard component**
+   - Create a `CharacterCard` component in a separate file
+   - Wrap it with `memo`
+   - Accept props: `character`, `isSelected`, `onToggleSelect`
+   - Add console.log to track renders
+
+6. **Create memoized statistics**
+   - Use `useMemo` to calculate statistics from selected characters:
+     ```jsx
+     const selectionStats = useMemo(() => {
+       const selected = characters.filter(c => selectedIds.has(c.id));
+       return {
+         count: selected.length,
+         avgHeight: selected.reduce((acc, c) => acc + Number(c.height) || 0, 0) / selected.length || 0,
+         avgMass: selected.reduce((acc, c) => acc + Number(c.mass) || 0, 0) / selected.length || 0
+       };
+     }, [characters, selectedIds]);
+     ```
+
+7. **Build the UI**
+   - Render a search input bound to `searchTerm`
+   - Render sort controls (select dropdowns for `sortBy` and `sortOrder`)
+   - Map over `sortedCharacters` and render `CharacterCard` for each
+   - Display selection statistics
+
+8. **Add the route**
+   - Add a route for `/character-search` in `App.jsx`
+   - Add a link to the Navbar
+
+9. **Test and verify optimizations**
+   - Open React DevTools Profiler (install React Developer Tools extension)
+   - Record interactions and verify:
+     - Typing in search only triggers filter/sort recalculations
+     - Changing sort only triggers sort recalculation
+     - Selecting a character only re-renders that specific card
+     - Other cards don't re-render when one is selected
+
+### Part E: When NOT to Optimize (Important!)
+
+**Goal:** Understand when performance optimizations are unnecessary or even harmful.
+
+#### Guidelines
+
+1. **Don't optimize prematurely**
+   - Only optimize when you've identified an actual performance problem
+   - Use React DevTools Profiler to measure before and after
+   - Simple components re-rendering is usually not a problem
+
+2. **Costs of optimization**
+   - `useMemo` and `useCallback` have memory overhead (storing cached values)
+   - They add complexity to your code
+   - Incorrect dependency arrays cause subtle bugs
+
+3. **When memo is unnecessary**
+   - Components that always receive different props
+   - Components that are very cheap to render
+   - Components with few children
+
+4. **When useCallback is unnecessary**
+   - Functions not passed to memoized children
+   - Functions not used in dependency arrays of other hooks
+   - Event handlers for non-memoized elements
+
+5. **When useMemo is unnecessary**
+   - Simple calculations (basic math, string concatenation)
+   - Values that change on every render anyway
+   - Creating new arrays/objects that are immediately destructured
+
+6. **Create comparison examples**
+   - In `PerformanceDemo`, create two versions of the same feature:
+     - One with all optimizations
+     - One without optimizations
+   - Add a toggle to switch between them
+   - Use React DevTools to compare actual performance
+   - Document when the optimization made a meaningful difference
+
+### Hints
+
+- **React.memo syntax:**
+
+  ```jsx
+  // Named function with memo
+  const MyComponent = memo(function MyComponent({ prop1, prop2 }) {
+    return <div>{prop1}</div>;
+  });
+
+  // Or with arrow function
+  const MyComponent = memo(({ prop1, prop2 }) => {
+    return <div>{prop1}</div>;
+  });
+
+  // With custom comparison function
+  const MyComponent = memo(
+    function MyComponent({ data }) {
+      return <div>{data.name}</div>;
+    },
+    (prevProps, nextProps) => {
+      // Return true if props are equal (skip re-render)
+      return prevProps.data.id === nextProps.data.id;
+    }
+  );
+  ```
+
+- **useCallback syntax:**
+
+  ```jsx
+  // Basic usage
+  const handleClick = useCallback(() => {
+    console.log('Clicked');
+  }, []);
+
+  // With dependencies
+  const handleClick = useCallback(() => {
+    console.log('Count:', count);
+    setCount(count + 1);
+  }, [count]);
+
+  // Using functional updates to avoid dependencies
+  const handleClick = useCallback(() => {
+    setCount(prev => prev + 1); // No need for count in deps
+  }, []);
+  ```
+
+- **useMemo syntax:**
+
+  ```jsx
+  // Basic usage
+  const expensiveValue = useMemo(() => {
+    return computeExpensiveValue(a, b);
+  }, [a, b]);
+
+  // Memoizing an object
+  const config = useMemo(() => ({
+    theme: darkMode ? 'dark' : 'light',
+    fontSize: 14,
+  }), [darkMode]);
+
+  // Memoizing a filtered array
+  const filteredItems = useMemo(() => {
+    return items.filter(item => item.active);
+  }, [items]);
+  ```
+
+- **Debugging re-renders:**
+
+  ```jsx
+  // Add this to any component to track renders
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(`Component rendered ${renderCount.current} times`);
+
+  // Or use useEffect to track prop changes
+  useEffect(() => {
+    console.log('Prop changed:', someProp);
+  }, [someProp]);
+  ```
+
+- **Using React DevTools Profiler:**
+  1. Install React Developer Tools browser extension
+  2. Open DevTools and go to "Profiler" tab
+  3. Click "Record" and interact with your app
+  4. Stop recording and analyze the flame graph
+  5. Look for components that re-render unnecessarily
+
+- **Referential equality matters:**
+
+  ```jsx
+  // These are NOT equal (new object each render)
+  const options = { color: 'blue' };
+  
+  // But with useMemo, they ARE equal across renders
+  const options = useMemo(() => ({ color: 'blue' }), []);
+  ```
+
+### Expected Result
+
+When you run the app, you should see:
+
+**Part A:**
+
+- A demo showing how `React.memo` prevents child re-renders
+- Console logs proving the child only renders when its props change
+- Understanding of the difference between memoized and non-memoized components
+
+**Part B:**
+
+- Functions wrapped in `useCallback` maintain stable references
+- Memoized child components don't re-render when callbacks are stable
+- Understanding of dependency arrays and when functions need to update
+
+**Part C:**
+
+- Expensive computations only run when their dependencies change
+- Console timing shows dramatic performance improvements
+- Derived state calculations are properly memoized
+
+**Part D:**
+
+- A fully optimized character search with filtering, sorting, and selection
+- Only affected components re-render on user interactions
+- React DevTools Profiler shows efficient rendering patterns
+
+**Part E:**
+
+- Understanding of when optimizations are worthwhile
+- Ability to measure and compare performance
+- Knowledge of the trade-offs involved in premature optimization
+
+### Common Mistakes to Avoid
+
+1. **Forgetting dependency arrays**
+   ```jsx
+   // BAD - runs on every render
+   const value = useMemo(() => expensive());
+   
+   // GOOD - only runs when deps change
+   const value = useMemo(() => expensive(x), [x]);
+   ```
+
+2. **Incorrect dependencies**
+   ```jsx
+   // BAD - stale closure
+   const handleClick = useCallback(() => {
+     console.log(count); // Always logs initial count
+   }, []);
+   
+   // GOOD - fresh value
+   const handleClick = useCallback(() => {
+     console.log(count);
+   }, [count]);
+   ```
+
+3. **Memoizing without memo on children**
+   ```jsx
+   // useCallback is pointless if child isn't memoized
+   const handleClick = useCallback(() => {}, []);
+   return <Child onClick={handleClick} />; // Child still re-renders!
+   
+   // Both are needed together
+   const MemoChild = memo(Child);
+   const handleClick = useCallback(() => {}, []);
+   return <MemoChild onClick={handleClick} />; // Now it works!
+   ```
+
+4. **Over-memoizing simple values**
+   ```jsx
+   // UNNECESSARY - simple calculation
+   const doubled = useMemo(() => count * 2, [count]);
+   
+   // JUST DO THIS
+   const doubled = count * 2;
+   ```
